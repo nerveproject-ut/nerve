@@ -32,8 +32,8 @@ class Exp(YOLOXBase):
         # DATASET CONFIGURATION [FIXED]
         # Update these paths for your dataset
         super().__init__(
-            dataset_path="/scratch-shared/tmp.8EGdXT6jjc/yolox_yolov8_distance_shist_davis_full_full",
-            data_yaml="/scratch-shared/tmp.8EGdXT6jjc/yolox_yolov8_distance_shist_davis_full_full/data.yaml"
+            dataset_path="/path/to/your/dataset",
+            data_yaml="/path/to/your/data.yaml"
         )
         
         # EXPERIMENT IDENTITY [FIXED]

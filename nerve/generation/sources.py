@@ -15,7 +15,10 @@ from nerve.extraction.utils.cameraParams import Mapping
 from nerve.extraction.utils.HiddenPrints import HiddenPrints
 
 try:
-    from nerve.radar import get_backend as _get_radar_backend
+    from nerve.radar import (
+        get_backend as _get_radar_backend,
+        open_recording as _open_radar_recording,
+    )
     _RADAR_AVAILABLE = True
 except ImportError:
     _RADAR_AVAILABLE = False
@@ -470,8 +473,17 @@ class Radar_source(DataSource):
 
         assert os.path.isdir(settings['data_path']), "Apparently, the radar directory located at {} doesn't exist..".format(settings['data_path'])
 
-        BackendCls = _get_radar_backend()
-        self._backend = BackendCls.from_recording(settings['data_path'])
+        # An explicit backend name in settings (e.g. "cached" or "pycore")
+        # bypasses the automatic cached-then-source fallback chain.  When
+        # not specified, open_recording tries each registered backend in
+        # registration order: the cached backend first (a precomputed
+        # radar_cache.h5 next to data.h5 is preferred when it exists),
+        # falling through to the source backend on FileNotFoundError.
+        radar_backend_name = settings.get('radar_backend')
+        self._backend = _open_radar_recording(
+            settings['data_path'],
+            name=radar_backend_name,
+        )
         self._num_frames = self._backend.get_num_frames()
         self._frame_idx = 0
 

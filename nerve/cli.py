@@ -367,6 +367,145 @@ def cmd_enrich(args) -> None:
         print("No locally extracted sessions found. Download some sessions first.")
 
 
+def cmd_precompute_radar_cache(args) -> None:
+    from pathlib import Path
+
+    from nerve.radar import available_backends
+    from nerve.radar.cache import build_cache
+    from nerve.radar.cached_backend import CACHE_FILENAME
+
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        tqdm = None
+
+    radar_subdir = args.radar_subdir
+
+    if args.path:
+        targets = [Path(p).expanduser().resolve() for p in args.path]
+    else:
+        from nerve.config import get_data_root
+
+        names = _resolve_sessions(args)
+        if names is None:
+            from nerve.registry import filter_sessions
+            kwargs = _build_filter_kwargs(args)
+            sessions = filter_sessions(data_root=args.data_root, **kwargs)
+            names = [s.name for s in sessions]
+
+        if not names:
+            print(
+                "No sessions selected. Pass session names as positional "
+                "arguments, --from-file, or use --split / --sensors filters.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        data_root = get_data_root(args.data_root)
+        targets = [Path(data_root) / n / radar_subdir for n in names]
+
+    backends = available_backends()
+    print(f"Available radar backends: {backends}")
+    if args.backend:
+        print(f"Using backend: {args.backend}")
+    else:
+        from nerve.radar.cached_backend import CachedBackend
+        from nerve.radar import _REGISTRY
+
+        sources = [n for n, c in _REGISTRY.items() if c is not CachedBackend]
+        if not sources:
+            print(
+                "Error: no source backend (e.g. pycore) is available; "
+                "the cached backend alone cannot generate a cache. "
+                "Install the proprietary DSP library or implement a "
+                "custom RadarBackend, then re-run.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print(f"Using backend (auto): {sources[0]}")
+
+    successes: list[Path] = []
+    skipped: list[Path] = []
+    failures: list[tuple[Path, str]] = []
+
+    for target in targets:
+        if not target.is_dir():
+            print(f"  ! Skip {target}: not a directory")
+            skipped.append(target)
+            continue
+
+        cache_path = target / CACHE_FILENAME
+        if cache_path.is_file() and not args.force:
+            print(f"  - Skip {target}: cache already exists "
+                  f"(pass --force to overwrite)")
+            skipped.append(target)
+            continue
+
+        print(f"\n{'=' * 70}\nPrecomputing cache for {target}\n{'=' * 70}")
+
+        bar = None
+        last_total = [0]
+
+        def progress(current, total):
+            if tqdm is not None:
+                if bar is None or last_total[0] != total:
+                    pass
+            else:
+                if current == total or current == 1 or current % 50 == 0:
+                    print(f"  frame {current}/{total}")
+
+        if tqdm is not None:
+            with tqdm(total=0, unit="frame",
+                      desc=str(target.name)) as bar:
+                def progress(current, total):
+                    if bar.total != total:
+                        bar.total = total
+                        bar.refresh()
+                    bar.n = current
+                    bar.refresh()
+
+                try:
+                    out = build_cache(
+                        target,
+                        backend_name=args.backend,
+                        include_range_doppler=not args.no_fft,
+                        force=args.force,
+                        progress_callback=progress,
+                    )
+                    successes.append(out)
+                    bar.close()
+                    print(f"  -> {out} "
+                          f"({out.stat().st_size / (1024 * 1024):.1f} MB)")
+                except Exception as exc:  # noqa: BLE001
+                    bar.close()
+                    print(f"  ! Failed: {exc}")
+                    failures.append((target, str(exc)))
+        else:
+            try:
+                out = build_cache(
+                    target,
+                    backend_name=args.backend,
+                    include_range_doppler=not args.no_fft,
+                    force=args.force,
+                    progress_callback=progress,
+                )
+                successes.append(out)
+                print(f"  -> {out} "
+                      f"({out.stat().st_size / (1024 * 1024):.1f} MB)")
+            except Exception as exc:  # noqa: BLE001
+                print(f"  ! Failed: {exc}")
+                failures.append((target, str(exc)))
+
+    print(f"\n{'=' * 70}")
+    print(f"Done. {len(successes)} cache(s) written, "
+          f"{len(skipped)} skipped, {len(failures)} failed.")
+    if failures:
+        print("Failures:")
+        for path, msg in failures:
+            print(f"  - {path}: {msg}")
+        sys.exit(1)
+
+
 def cmd_reconstruct(args) -> None:
     import subprocess
     from pathlib import Path
@@ -640,6 +779,47 @@ def main(argv: list[str] | None = None) -> None:
         parents=[shared],
     )
 
+    # --- precompute-radar-cache ---
+    p_prc = subs.add_parser(
+        "precompute-radar-cache",
+        help=("Pre-extract per-frame radar point clouds and Range-Doppler "
+              "maps to a portable HDF5 file, so that downstream users "
+              "without the radar DSP library can still generate datasets."),
+        parents=[shared],
+    )
+    p_prc.add_argument(
+        "sessions", nargs="*", metavar="SESSION",
+        help="Session names (resolved against --data-root). Mutually "
+             "exclusive with --path.",
+    )
+    _add_filter_args(p_prc)
+    p_prc.add_argument(
+        "--path", nargs="+", metavar="DIR",
+        help="One or more radar recording directories (e.g. "
+             "/data/.../session/ti_radar). Mutually exclusive with "
+             "session-name resolution.",
+    )
+    p_prc.add_argument(
+        "--radar-subdir", default="ti_radar",
+        help="Subdirectory inside each session that holds the radar "
+             "recording (default: ti_radar).",
+    )
+    p_prc.add_argument(
+        "--backend", default=None,
+        help="Source radar backend identifier (e.g. pycore). Defaults "
+             "to the first registered non-cached backend.",
+    )
+    p_prc.add_argument(
+        "--no-fft", action="store_true",
+        help="Skip Range-Doppler maps to produce a much smaller cache "
+             "(point cloud only). Use only if your dataset settings "
+             "have store_fft=false.",
+    )
+    p_prc.add_argument(
+        "--force", action="store_true",
+        help="Overwrite an existing radar_cache.h5.",
+    )
+
     # --- visualize ---
     p_vis = subs.add_parser(
         "visualize",
@@ -765,6 +945,8 @@ def main(argv: list[str] | None = None) -> None:
         cmd_download(args)
     elif args.command == "enrich":
         cmd_enrich(args)
+    elif args.command == "precompute-radar-cache":
+        cmd_precompute_radar_cache(args)
     elif args.command == "generate":
         cmd_generate(args)
     elif args.command == "visualize":

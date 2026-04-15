@@ -208,12 +208,7 @@ class ModuleWithDistance(pl.LightningModule):
                     all_distances.append(label.distance)
                 elif hasattr(label, 'has_distance') and label.has_distance:
                     all_distances.append(label.distance)
-            
-            # #region agent log
-            import json; _log_path = '/home/omansour/.cursor/debug.log'
-            with open(_log_path, 'a') as _f: _f.write(json.dumps({'hypothesisId': 'A,E', 'location': 'detection_distance.py:training_step', 'message': 'distance_extraction', 'data': {'num_labels': len(obj_labels), 'all_distances_len': len(all_distances), 'first_label_has_distance': hasattr(obj_labels[0], 'has_distance') and obj_labels[0].has_distance if obj_labels else False, 'first_label_distance_is_none': obj_labels[0].distance is None if obj_labels and hasattr(obj_labels[0], 'distance') else 'no_attr'}}) + '\n')
-            # #endregion
-            
+
             if all_distances:
                 # Concatenate all distances into a single tensor
                 distance_targets = th.cat([d if isinstance(d, th.Tensor) else th.tensor(d) 

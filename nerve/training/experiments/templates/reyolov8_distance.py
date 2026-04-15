@@ -25,10 +25,12 @@ class Exp(ReYOLOv8Base):
     """
     
     def __init__(self):
-        # Initialize with your data.yaml path
+        # Set these to your dataset (must be an HDF5 sequence dataset with a
+        # data.yaml describing the train/val/test splits, generated with radar
+        # fusion - see PEGMA dataset generation docs).
         super().__init__(
-            dataset_path="/scratch-shared/tmp.8EGdXT6jjc/reyolov8_dataset",
-            data_yaml="/scratch-shared/tmp.8EGdXT6jjc/reyolov8_dataset/data.yaml"
+            dataset_path="/path/to/your/dataset",
+            data_yaml="/path/to/your/data.yaml"
         )
         
         # Experiment Identity

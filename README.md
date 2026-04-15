@@ -678,6 +678,47 @@ not needed here -- only the config path matters.
 nerve train --config nerve/training/experiments/templates/reyolov8_distance.py
 ```
 
+### `nerve precompute-radar-cache`
+
+Pre-extract per-frame radar point clouds and Range-Doppler maps to a
+portable HDF5 file (`radar_cache.h5`) inside each session's `ti_radar/`
+directory. The cache is produced once on a machine that has the proprietary
+radar DSP library; afterwards anyone who clones the
+repository -- even **without** a DSP backend installed -- can run
+`nerve generate` on those sessions, because the cached backend is
+auto-discovered and serves the same per-frame outputs that the original
+backend would have produced.
+
+```bash
+# Cache one downloaded session
+nerve precompute-radar-cache 2023-10-26_15-37-59 \
+    --data-root /mnt/external_drive/nerve_data
+
+# Cache an entire split
+nerve precompute-radar-cache --split train \
+    --data-root /mnt/external_drive/nerve_data
+
+# Cache a list of sessions, force-overwriting any existing caches
+nerve precompute-radar-cache --from-file my_sessions.txt \
+    --data-root /mnt/external_drive/nerve_data \
+    --force
+
+# Cache a directory directly (no session-name resolution)
+nerve precompute-radar-cache --path /data/some/session/ti_radar
+
+# Skip Range-Doppler to make the cache ~95% smaller (only safe if the
+# downstream dataset settings have store_fft = false)
+nerve precompute-radar-cache --split train --no-fft \
+    --data-root /mnt/external_drive/nerve_data
+```
+
+When a `radar_cache.h5` exists alongside `data.h5` in a session's
+`ti_radar/` directory, `Radar_source` will pick up the cached backend
+first and only fall back to the source backend if the cache is missing.
+This fallback is automatic and requires no changes to dataset settings;
+to pin the choice explicitly, set `"radar_backend": "cached"` (or
+`"pycore"`) inside the radar entry of your settings template.
+
 ---
 
 ## Python API
@@ -757,18 +798,35 @@ paths = resolve_session_paths("my_sessions.txt", data_root="./data")
 
 ### Radar Backend
 
+NERVE bundles two `RadarBackend` implementations and auto-discovers them
+on first use:
+
+| Backend  | Source of truth                                    | Always available?                    |
+| -------- | -------------------------------------------------- | ------------------------------------ |
+| `cached` | `radar_cache.h5` produced by `precompute-radar-cache` | Yes (only h5py + numpy)            |
+| `propietary` | Raw TI AWR1443 recording via the proprietary DSP   | Only if the DSP library is installed |
+
+Auto-discovery registers `cached` first so it becomes the default. Use
+`open_recording()` for the smart "cached first, source backend as
+fallback" behavior; `get_backend(name)` to pick one explicitly.
+
 ```python
-from nerve.radar import get_backend, available_backends
+from nerve.radar import open_recording, available_backends, get_backend
 
-print(available_backends())  # e.g. ["my_backend"] if you registered one
+print(available_backends())
+# e.g. ["cached", "pycore"]    on a machine with the DSP library
+# e.g. ["cached"]               on a fresh clone
 
-try:
-    Backend = get_backend()  # first registered backend
-    radar = Backend.from_recording("./data/2023-10-26_15-37-59/ti_radar")
-    print(f"Frames: {radar.get_num_frames()}")
-    pc = radar.get_point_cloud(0)  # [N, 5] -> x, y, z, velocity, snr
-except (ImportError, ValueError):
-    print("No radar backend available. Subclass RadarBackend for your own implementation.")
+# Smart open: tries cached first, falls back to pycore if no cache exists
+radar = open_recording("./data/2023-10-26_15-37-59/ti_radar")
+print(f"Frames: {radar.get_num_frames()}")
+pc = radar.get_point_cloud(0)        # [N, 5] -> x, y, z, vx, vy
+fft = radar.get_range_doppler(0)     # [R, D] Range-Doppler magnitudes
+radar.close()
+
+# Or pin a specific backend
+Cached = get_backend("cached")
+radar = Cached.from_recording("./data/2023-10-26_15-37-59/ti_radar")
 ```
 
 Custom backends can be registered at runtime:
@@ -780,6 +838,19 @@ class MyRadarBackend(RadarBackend):
     ...
 
 register_backend("my_backend", MyRadarBackend)
+```
+
+Building a cache programmatically (instead of via the CLI):
+
+```python
+from nerve.radar.cache import build_cache
+
+build_cache(
+    "/data/sessions/2023-12-15_15-02-22/ti_radar",
+    backend_name="propietary",         # or None for first available source backend
+    include_range_doppler=True,    # set False for a smaller, point-cloud-only cache
+    force=False,
+)
 ```
 
 ---
@@ -1059,6 +1130,29 @@ Templates use `$NERVE_MAPPINGS` as a path sentinel that auto-resolves to the bun
 | **ReYOLOv8** | Recurrent event detection    | HDF5 sequences | Yes (with radar) |
 | **RVT**      | Recurrent Vision Transformer | HDF5 sequences | Yes (with radar) |
 
+
+### Vendored third-party trainers
+
+ReYOLOv8 and YOLOX trainers depend on **custom forks** of upstream projects
+(an `ultralytics 8.0.41` fork that adds `DetectionModel2`, `AutoBackendMemory`,
+recurrent backbones under `models/v8/Recurrent/`, etc., and a `YOLOX` fork
+with the distance-estimation head). Both forks are vendored directly inside
+the repository so that a fresh clone + fresh environment can train without
+extra setup steps:
+
+| Vendored fork                            | Used by                              |
+| ---------------------------------------- | ------------------------------------ |
+| `nerve/training/reyolov8/ultralytics/`   | ReYOLOv8 training/eval subprocess    |
+| `nerve/training/yoloX/`                  | YOLOX training/eval subprocess       |
+
+The ReYOLOv8 trainer is launched as a subprocess with
+`cwd=nerve/training/reyolov8/`, which puts that directory at the head of
+Python's `sys.path`. As a result, its `from ultralytics.yolo.*` imports
+resolve to the vendored 8.0.41 fork (NOT the modern `ultralytics>=8.0` from
+`pip install -e ".[training]"`, which is still required for the rest of the
+package: YOLOv8 training, label extraction, etc.). The two `ultralytics`
+installs do not conflict because they are picked up by different processes
+through different `sys.path` entries.
 
 ### Example
 

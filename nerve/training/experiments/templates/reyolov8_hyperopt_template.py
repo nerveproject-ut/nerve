@@ -39,9 +39,8 @@ class Exp(ReYOLOv8Base):
         # DATASET CONFIGURATION [FIXED]
         # Set these to your actual dataset paths
         super().__init__(
-            # TODO: Update these paths for your dataset
-            dataset_path="/scratch-shared/tmp.8EGdXT6jjc/reyolo_distance_vtei_davis_full_full",
-            data_yaml="/scratch-shared/tmp.8EGdXT6jjc/reyolo_distance_vtei_davis_full_full/data.yaml"
+            dataset_path="/path/to/your/dataset",
+            data_yaml="/path/to/your/data.yaml"
         )
         
         # EXPERIMENT IDENTITY [FIXED]

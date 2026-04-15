@@ -22,9 +22,12 @@ class Exp(YOLOXBase):
     """
     
     def __init__(self):
+        # Set these to your dataset (must contain a data.yaml describing the
+        # train/val/test splits). The dataset must include radar fused with the
+        # event/PNG frames - see PEGMA dataset generation docs.
         super().__init__(
-            dataset_path="/scratch-shared/tmp.8EGdXT6jjc/yolox_yolov8_dataset",
-            data_yaml="/scratch-shared/tmp.8EGdXT6jjc/yolox_yolov8_dataset/data.yaml"
+            dataset_path="/path/to/your/dataset",
+            data_yaml="/path/to/your/data.yaml"
         )
         
         # Experiment Identity
