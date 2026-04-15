@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nerve-dataset"
+version = "0.1.0"
+description = "NERVE: Neuromorphic Vision and Radar Ensemble — toolkit for multi-modal sensor fusion dataset access, processing, and model training"
+readme = "README.md"
+license = {text = "CC-BY-NC-SA-3.0-IGO"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Omar Mansour"},
+    {name = "Pietro Martinello"},
+    {name = "Ethan Milon"},
+    {name = "Yingfu Xu"},
+    {name = "Manolis Sifalakis"},
+    {name = "Amirreza Yousefzadeh"},
+    {name = "Guangzhi Tang"},
+]
+keywords = [
+    "neuromorphic", "event-camera", "DVS", "radar", "sensor-fusion",
+    "multi-modal", "dataset", "object-detection", "distance-estimation",
+    "COCO", "FMCW", "mmWave",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "numpy>=1.24",
+    "h5py>=3.9",
+    "hdf5plugin>=4.0",
+    "opencv-python>=4.8",
+    "tqdm>=4.65",
+    "requests>=2.31",
+    "pyyaml>=6.0",
+    "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+extraction = [
+    "kornia>=0.7",
+    "pycocotools>=2.0",
+    "ffmpeg-python>=0.2",
+    "ultralytics>=8.0",
+]
+training = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "ultralytics>=8.0",
+    "pytorch-lightning>=1.8",
+    "hydra-core>=1.3",
+    "omegaconf>=2.3",
+    "einops>=0.6",
+    "numba",
+    "wandb",
+    "tensorboard>=2.14",
+    "scipy>=1.10",
+    "seaborn>=0.13",
+    "pandas>=2.0",
+    "plotly>=5.13",
+    "bbox-visualizer>=0.1",
+]
+processing = [
+    "torch>=2.0",
+]
+walkthroughs = [
+    "jupyter>=1.0",
+    "matplotlib>=3.7",
+    "seaborn>=0.13",
+    "pandas>=2.0",
+]
+all = ["nerve-dataset[extraction,training,processing,walkthroughs]"]
+
+[project.scripts]
+nerve = "nerve.cli:main"
+
+[project.urls]
+Homepage = "https://data.4tu.nl/private_datasets/BaEVPhT4moLWOb77YHjr8lzQlaF2F1vG441wRd3i7ek"
+Repository = "https://github.com/nerveproject-ut/nerve"
+
+[tool.setuptools.packages.find]
+include = ["nerve*"]
+
+[tool.setuptools.package-data]
+"nerve.data" = ["*.json"]
+"nerve.data.mappings" = ["*.json"]
+"nerve.generation.templates" = ["*.json"]

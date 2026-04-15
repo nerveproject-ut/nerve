@@ -1,0 +1,35 @@
+[
+  {
+    "_comment": "Template for ReYOLOv8 + Infineon radar fusion + distance (Prophesee)",
+    "_target": "ReYOLOv8 with distance estimation using Prophesee + Infineon radar",
+
+    "filter_classes": ["person"],
+
+    "data": "prophesee",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_prophesee.json",
+    
+    "frame_period_ms": 16.67,
+    "output_shape": [640, 360],
+    
+    "use_raw_events": true,
+    "event_representation": "vtei",
+    "bins": 5,
+    
+    "store_as_hdf5": true,
+    "clip_mode": "sequence",
+    "clip_length": 11,
+    "clip_stride": 11
+  },
+  {
+    "_comment": "Infineon Position2Go radar source for fusion and distance extraction",
+    
+    "data": "infineon_radar",
+    "mapping": "$NERVE_MAPPINGS/infineon_radar_to_prophesee.json",
+    
+    "output_shape": [640, 360],
+    "max_dist": 10.0,
+    "radar_dilation": 5,
+    "store_fft": false,
+    "project_poc": true
+  }
+]

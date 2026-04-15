@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+title: "NERVE: Neuromorphic Vision and Radar Ensemble"
+message: "If you use this dataset or software, please cite it using the metadata from this file."
+type: dataset
+authors:
+  - given-names: Omar
+    family-names: Mansour
+    affiliation: University of Twente
+  - given-names: Pietro
+    family-names: Martinello
+    affiliation: IMEC
+  - given-names: Ethan
+    family-names: Milon
+    affiliation: University of Twente
+  - given-names: Yingfu
+    family-names: Xu
+    affiliation: Maastricht University
+  - given-names: Manolis
+    family-names: Sifalakis
+    affiliation: IMEC
+  - given-names: Amirreza
+    family-names: Yousefzadeh
+    affiliation: Maastricht University
+  - given-names: Guangzhi
+    family-names: Tang
+    affiliation: University of Twente
+repository-code: "https://github.com/nerveproject-ut/nerve"
+url: "https://data.4tu.nl/private_datasets/BaEVPhT4moLWOb77YHjr8lzQlaF2F1vG441wRd3i7ek"
+keywords:
+  - neuromorphic
+  - event camera
+  - DVS
+  - radar
+  - sensor fusion
+  - multi-modal dataset
+  - object detection
+  - distance estimation
+  - COCO annotations
+  - FMCW radar
+license: CC-BY-NC-SA-3.0-IGO
+date-released: "2026-01-01"

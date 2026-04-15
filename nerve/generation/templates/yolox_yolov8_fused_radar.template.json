@@ -1,0 +1,63 @@
+[
+  {
+    "_comment": "Template for YOLOX/YOLOv8 with fused DVS+Radar PNG images",
+    "_target": "YOLOX, YOLOv8 (fused DVS histogram + radar point cloud)",
+    "_key_flags": {
+      "fuse_dvs_radar_png": "true - Create fused 3-channel images (2 DVS polarity + 1 radar)",
+      "fused_modality_name": "Name for the fused modality output (default: {dvs_source}_radar)",
+      "fusion_dilation": "Dilation kernel size for radar before fusion (default: 5)",
+      "store_as_hdf5": "false - Store as PNG images",
+      "clip_mode": "single_frame - Required for PNG fusion",
+      "filter_classes": "List of class names to filter (e.g. ['person'])"
+    },
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+    
+    "frame_period_ms": 50,
+    "accumulation_ms": 50,
+    "max_events": 15,
+    "avg_pool_kernel": 1,
+    "output_shape": [640, 640],
+    "pad_size": [0, 0],
+    
+    "use_filter": false,
+    "use_raw_events": false,
+    "store_as_hdf5": false,
+    "clip_mode": "single_frame",
+    
+    "fuse_dvs_radar_png": true,
+    "fused_modality_name": "davis_radar",
+    "fusion_dilation": 5
+  },
+  {
+    "_comment": "Radar source for fusion - required when fuse_dvs_radar_png is true",
+    
+    "data": "ti_radar",
+    "mapping": "$NERVE_MAPPINGS/ti_radar_to_davis.json",
+    
+    "output_shape": [640, 640],
+    "max_dist": 10.0,
+    "radar_dilation": 0,
+    "store_fft": false,
+    "project_poc": true
+  }
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,30 @@
+[
+  {
+    "_comment": "Template for YOLOX/YOLOv8 with event representation (VTEI, voxel_grid, etc.) as PNG",
+    "_target": "YOLOX, YOLOv8 (with advanced event representations)",
+    "_key_flags": {
+      "event_representation": "vtei, voxel_grid, shist, mdes, or ev_temporal_volume - applied before PNG output",
+      "bins": "Number of temporal bins for the representation (e.g., 10 for VTEI creates 10 channels)",
+      "store_as_hdf5": "false - Store as PNG images (not HDF5)",
+      "clip_mode": "single_frame - One image per frame",
+      "filter_classes": "List of class names to filter (e.g. ['person']). Original COCO IDs preserved."
+    },
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+    
+    "frame_period_ms": 50,
+    "output_shape": [640, 640],
+    
+    "event_representation": "vtei",
+    "bins": 10,
+    
+    "use_filter": false,
+    "store_as_hdf5": false,
+    "clip_mode": "single_frame"
+  }
+]
+
+

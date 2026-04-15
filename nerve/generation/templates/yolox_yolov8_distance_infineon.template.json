@@ -1,0 +1,26 @@
+[
+  {
+    "_comment": "Template for YOLOX/YOLOv8 + Infineon radar distance estimation",
+    "_target": "Frame-based detection with Infineon radar distance",
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+
+    "frame_period_ms": 16.67,
+    "output_shape": [384, 288]
+  },
+  {
+    "_comment": "Infineon Position2Go radar source for distance extraction",
+
+    "data": "infineon_radar",
+    "mapping": "$NERVE_MAPPINGS/infineon_radar_to_davis.json",
+
+    "output_shape": [384, 288],
+    "max_dist": 10.0,
+    "radar_dilation": 15,
+    "store_fft": false,
+    "project_poc": true
+  }
+]

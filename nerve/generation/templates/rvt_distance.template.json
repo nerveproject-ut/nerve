@@ -1,0 +1,40 @@
+[
+  {
+    "_comment": "Template for RVT (Recurrent Vision Transformer) training with distance estimation",
+    "_target": "RVT (event-based recurrent detection with distance)",
+    "_key_flags": {
+      "output_format": "rvt - RVT-compatible format with event_representations_v2/ and labels_v2/",
+      "use_raw_events": "true - Store raw events for representation at training time",
+      "event_representation": "stacked_histogram (default for RVT), or vtei, voxel_grid, etc.",
+      "filter_classes": "List of class names to filter (e.g. ['person'])"
+    },
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+    
+    "frame_period_ms": 16.67,
+    "output_shape": [384, 320],
+    
+    "use_raw_events": true,
+    "event_representation": "stacked_histogram",
+    "bins": 5,
+    
+    "output_format": "rvt",
+    "clip_mode": "sequence",
+    "sequence_length": 11
+  },
+  {
+    "_comment": "Radar source for distance estimation - adds distance labels",
+    "data": "ti_radar",
+    "mapping": "$NERVE_MAPPINGS/ti_radar_to_davis.json",
+    
+    "output_shape": [384, 320],
+    
+    "max_dist": 10.0,
+    "radar_dilation": 5,
+    "fuse_radar_channel": true
+  }
+]
+

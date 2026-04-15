@@ -1,0 +1,49 @@
+[
+  {
+    "_comment": "Template for YOLOX/YOLOv8 with distance estimation (PNG + radar)",
+    "_target": "YOLOX or YOLOv8 with distance estimation (requires radar)",
+    "_key_flags": {
+      "use_raw_events": "false - Apply event representation to create image-like output",
+      "store_as_hdf5": "false - Store as PNG images",
+      "clip_mode": "single_frame - One image per frame",
+      "radar": "REQUIRED for distance estimation - fused as additional channel",
+      "filter_classes": "List of class names to filter (e.g. ['person']). IDs Original COCO IDs preserved.",
+      "fuse_dvs_radar_png": "true - Create fused 3-channel PNG images (2 DVS polarity + 1 radar)",
+      "fused_modality_name": "Name for the fused output modality (default: {data}_radar)",
+      "fusion_dilation": "Dilation kernel size for radar before fusion (default: 5)"
+    },
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+    
+    "frame_period_ms": 16.6,
+    "accumulation_ms": 16.6,
+    "max_events": 5,
+    "avg_pool_kernel": 1,
+    "output_shape": [346, 260],
+    "pad_size": [0, 0],
+    
+    "use_filter": false,
+    "use_raw_events": false,
+    "store_as_hdf5": false,
+    "clip_mode": "single_frame",
+    
+    "fuse_dvs_radar_png": true,
+    "fused_modality_name": "davis_radar",
+    "fusion_dilation": 0
+  },
+  {
+    "_comment": "Radar source for fusion and distance extraction",
+    
+    "data": "ti_radar",
+    "mapping": "$NERVE_MAPPINGS/ti_radar_to_davis.json",
+    
+    "output_shape": [346, 260],
+    "max_dist": 10.0,
+    "radar_dilation": 5,
+    "store_fft": false,
+    "project_poc": true
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "_comment": "Template for YOLOX/YOLOv8 training with PNG output",
+    "_target": "YOLOX, YOLOv8 (standard detection)",
+    "_key_flags": {
+      "use_raw_events": "false - Apply event representation to create image-like output",
+      "store_as_hdf5": "false - Store as PNG images",
+      "clip_mode": "single_frame - One image per frame",
+      "filter_classes": "List of class names to filter (e.g. ['person']). IDs Original COCO IDs preserved."
+    },
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+    
+    "frame_period_ms": 50,
+    "accumulation_ms": 50,
+    "max_events": 15,
+    "avg_pool_kernel": 1,
+    "output_shape": [640, 640],
+    "pad_size": [0, 0],
+    
+    "use_filter": false,
+    "use_raw_events": false,
+    "store_as_hdf5": false,
+    "clip_mode": "single_frame"
+  }
+]

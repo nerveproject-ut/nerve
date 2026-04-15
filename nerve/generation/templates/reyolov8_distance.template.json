@@ -1,0 +1,44 @@
+[
+  {
+    "_comment": "Template for ReYOLOv8 + radar fusion + distance estimation",
+    "_target": "ReYOLOv8 with distance estimation (requires radar)",
+    "_key_flags": {
+      "use_raw_events": "true - Store raw events for representation at training time",
+      "store_as_hdf5": "true - Store as HDF5 sequences",
+      "clip_mode": "sequence - Store entire session as one sequence",
+      "event_representation": "vtei - creates 10 channels, +1 for radar = 11 total",
+      "radar": "REQUIRED for distance estimation",
+      "filter_classes": "List of class names to filter (e.g. ['person']). IDs Original COCO IDs preserved."
+    },
+
+    "filter_classes": ["person"],
+
+    "data": "davis",
+    "mapping": "$NERVE_MAPPINGS/rgb_to_davis.json",
+    
+    "frame_period_ms": 16.67,
+    "output_shape": [384, 288],
+    
+    "use_raw_events": true,
+    "event_representation": "vtei",
+    "bins": 5,
+    
+    "store_as_hdf5": true,
+    "clip_mode": "sequence",
+    "clip_length": 11,
+    "clip_stride": 11
+  },
+  {
+    "_comment": "Radar source for fusion and distance extraction",
+    
+    "data": "ti_radar",
+    "mapping": "$NERVE_MAPPINGS/ti_radar_to_davis.json",
+    
+    "output_shape": [384, 288],
+    "max_dist": 10.0,
+    "radar_dilation": 5,
+    "store_fft": false,
+    "project_poc": true
+  }
+]
+
